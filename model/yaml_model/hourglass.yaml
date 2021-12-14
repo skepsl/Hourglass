@@ -1,0 +1,36 @@
+# inputs
+# [id, args]
+# id: input identifier
+# args: input arguments (e.g., input channel size)
+inputs:
+  - ['input', {ch_out: 24}]
+
+# outputs
+# [id, layer]
+# id: output identifier
+# layer: output layer (id)
+outputs:
+  - ['output', 'head:4']
+
+# layers
+# [id, parent, repeat, module, args]
+# id: layer identifier
+# parent: parent layer(s) (id or index, negative indexing can be used, starts with 'input' if it is an input)
+# repeat: number of repeats
+# module: module name
+# arg: module arguments
+layers:
+  - ['backbone:0', 'input', 1, Conv2D, {ch_out: 64, kernel: 1, stride: 1, batch_norm: True, activation: 'leaky_relu', activation_param: 0.1}]
+  - ['backbone:1', -1, 1, Bottleneck, {ch_out: 64, activation: 'leaky_relu', activation_param: 0.1}]
+  - ['backbone:2', -1, 1, Conv2D, {ch_out: 64, kernel: 3, stride: 2, batch_norm: True, activation: 'leaky_relu', activation_param: 0.1}]
+  - ['backbone:3', -1, 1, Bottleneck, {ch_out: 64, activation: 'leaky_relu', activation_param: 0.1}]
+  - ['backbone:4', -1, 1, Conv2D, {ch_out: 64, kernel: 3, stride: 2, batch_norm: True, activation: 'leaky_relu', activation_param: 0.1}]
+  - ['backbone:5', -1, 1, Hourglass, {inner_ch_list: [128, 256, 512, 1024]}]
+  - ['backbone:6', -1, 1, Bottleneck, {ch_out: 64, activation: 'leaky_relu', activation_param: 0.1}]
+  - ['backbone:7', -1, 1, Hourglass, {inner_ch_list: [128, 256, 512, 1024]}]
+  - ['head:0', 'backbone:7', 1, Conv2D, {ch_out: 64, kernel: 3, stride: 1, batch_norm: False, activation: 'relu'}]
+  - ['head:1', -1, 1, Conv2D, {ch_out: 12, kernel: 1, stride: 1, batch_norm: False, activation: ''}]
+  - ['head:2', 'backbone:7', 1, Conv2D, {ch_out: 64, kernel: 3, stride: 1, batch_norm: False, activation: 'relu'}]
+  - ['head:3', -1, 1, Conv2D, {ch_out: 12, kernel: 1, stride: 1, batch_norm: False, activation: ''}]
+  - ['head:4', ['head:1', 'head:3'], 1, Concat, {dimension: 1}]
+
